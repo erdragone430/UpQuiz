@@ -3,10 +3,10 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: quiz_db
+    container_name: *
     environment:
-      POSTGRES_USER: quiz_user
-      POSTGRES_PASSWORD: quiz_password
+      POSTGRES_USER: *
+      POSTGRES_PASSWORD: *
       POSTGRES_DB: quiz_db
     ports:
       - "5432:5432"
