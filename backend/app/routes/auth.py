@@ -42,7 +42,7 @@ class QuizHistory(BaseModel):
 
 # Register
 @router.post("/register", response_model=TokenResponse)
-async def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(user_data: UserRegister, request: Request, db: Session = Depends(get_db)):
     # Check if user exists
     existing_user = db.query(User).filter(User.username == user_data.username).first()
     if existing_user:
@@ -68,11 +68,15 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     admin_username = os.getenv("ADMIN_USERNAME", "admin")
     is_admin = (user_data.username == admin_username)
     
+    # Get IP address from request
+    ip_address = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+    
     # Create user
     new_user = User(
         username=user_data.username,
         hashed_password=hash_password(user_data.password),
-        is_admin=is_admin
+        is_admin=is_admin,
+        ip_address=ip_address
     )
     db.add(new_user)
     db.commit()
