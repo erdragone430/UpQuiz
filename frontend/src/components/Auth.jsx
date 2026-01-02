@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Logo from "./Logo.jsx";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+const API_BASE = "/api";
 
 function Auth({ onLogin, onGuestMode }) {
 const [isLogin, setIsLogin] = useState(true);
