@@ -1,7 +1,7 @@
 from fastapi import APIRouter, UploadFile, File
 
 router = APIRouter(
-    prefix="/api/upload",
+    prefix="/upload",
     tags=["upload"]
 )
 

@@ -64,7 +64,9 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
     
     # Check if this is the admin account
-    is_admin = (user_data.username == "kingdragone")
+    import os
+    admin_username = os.getenv("ADMIN_USERNAME", "admin")
+    is_admin = (user_data.username == admin_username)
     
     # Create user
     new_user = User(

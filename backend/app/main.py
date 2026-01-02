@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.quiz import router as quiz_router
 from app.routes.auth import router as auth_router
+from app.routes.upload import router as upload_router
 from app.database import Base, engine
 
 # Create database tables
@@ -21,6 +22,7 @@ app.add_middleware(
 # Include routers with /api prefix
 app.include_router(quiz_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
+app.include_router(upload_router, prefix="/api")
 
 @app.get("/")
 def read_root():

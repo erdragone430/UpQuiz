@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Result from "./Result.jsx";
 import FileFormatInfo from "./FileFormatInfo.jsx";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000";
+const API_BASE = "/api";
 
 function Quiz({ username }) {
 const [file, setFile] = useState(null);

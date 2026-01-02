@@ -3,36 +3,37 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: *
+    container_name: quiz_db
+    restart: always
     environment:
-      POSTGRES_USER: *
-      POSTGRES_PASSWORD: *
-      POSTGRES_DB: *
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U *"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  backend:
+  app:
     build: ./backend
-    container_name: quiz_backend
-    ports:
-      - "8000:8000"
+    container_name: upquiz_app
+    restart: always
     environment:
-      DATABASE_URL: postgresql://quiz_user:quiz_password@postgres:5432/quiz_db
-      PYTHONDONTWRITEBYTECODE: 1
-      PYTHONUNBUFFERED: 1
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PORT: 3000
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/app:/app/app
     depends_on:
       postgres:
         condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-    volumes:
-      - ./backend:/app
 
 volumes:
   postgres_data:
