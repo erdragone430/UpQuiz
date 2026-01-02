@@ -98,14 +98,12 @@ async def simulate_quiz(file: UploadFile = File(...), max_questions: int = 31):
     random.shuffle(questions)
     quiz = questions[:min(max_questions, len(questions))]
 
-    # Shuffle opzioni e rimuovi indice corretto
+    # Rimuovi indice corretto dalle opzioni (già mescolate dal parser)
     quiz_for_user = []
     for q in quiz:
-        options = q["options"].copy()
-        random.shuffle(options)
         quiz_for_user.append({
             "question": q["question"],
-            "options": options,
+            "options": q["options"],
             "comment": q.get("comment", "")
         })
 

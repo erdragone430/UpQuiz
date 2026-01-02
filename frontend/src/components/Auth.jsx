@@ -26,8 +26,14 @@ body: JSON.stringify({ username, password }),
 });
 
 if (!response.ok) {
+let errorMessage = "Authentication failed";
+try {
 const data = await response.json();
-throw new Error(data.detail || "Authentication failed");
+errorMessage = data.detail || errorMessage;
+} catch {
+errorMessage = `Server error: ${response.status}`;
+}
+throw new Error(errorMessage);
 }
 
 const data = await response.json();

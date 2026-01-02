@@ -76,7 +76,7 @@ async def register(user_data: UserRegister, request: Request, db: Session = Depe
         username=user_data.username,
         hashed_password=hash_password(user_data.password),
         is_admin=is_admin,
-        ip_address=ip_address
+        last_ip=ip_address
     )
     db.add(new_user)
     db.commit()
