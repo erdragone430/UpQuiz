@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Result from "./Result.jsx";
 import FileFormatInfo from "./FileFormatInfo.jsx";
+import Spinner from "./Spinner.jsx";
 
 const API_BASE = "/api";
 
@@ -16,6 +17,12 @@ const [error, setError] = useState(null);
 const [warnings, setWarnings] = useState([]);
 const [showFormatInfo, setShowFormatInfo] = useState(false);
 const [startTime, setStartTime] = useState(null);
+
+useEffect(() => {
+  if (result) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}, [result]);
 
 const handleFileChange = (e) => {
 const selected = e.target.files?.[0] || null;
@@ -144,7 +151,7 @@ onClick={startQuiz}
 disabled={!file || isLoading}
 className="btn btn-primary"
 >
-{isLoading ? "Loading..." : "Start Quiz"}
+{isLoading ? <Spinner label="Loading" size="sm" /> : "Start Quiz"}
 </button>
 </div>
     {error && (
@@ -164,6 +171,12 @@ className="btn btn-primary"
       </div>
     )}
   </div>
+
+  {isLoading && (
+    <div className="loading">
+      <Spinner label="Preparing quiz..." block />
+    </div>
+  )}
 
 {showFormatInfo && <FileFormatInfo onClose={() => setShowFormatInfo(false)} />}
 
@@ -196,7 +209,7 @@ onClick={submitQuiz}
 disabled={isSubmitting}
 className="btn btn-primary btn-submit"
 >
-{isSubmitting ? "Submitting..." : "Submit Answers"}
+{isSubmitting ? <Spinner label="Submitting" size="sm" /> : "Submit Answers"}
 </button>
 </div>
 </div>

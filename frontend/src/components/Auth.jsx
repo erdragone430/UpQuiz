@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Logo from "./Logo.jsx";
+import Spinner from "./Spinner.jsx";
 
 const API_BASE = "/api";
 
@@ -87,7 +88,7 @@ type="submit"
 className="btn btn-primary auth-btn"
 disabled={isLoading}
 >
-{isLoading ? "Loading..." : (isLogin ? "Login" : "Register")}
+{isLoading ? <Spinner label="Loading" size="sm" /> : (isLogin ? "Login" : "Register")}
 </button>
 </form>
 

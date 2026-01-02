@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Spinner from "./Spinner.jsx";
 
 const API_BASE = "/api";
 
@@ -52,7 +53,11 @@ function AdminDashboard({ onLogout }) {
 				</button>
 			</div>
 
-			{isLoading && <p className="loading">Loading users...</p>}
+			{isLoading && (
+				<div className="loading">
+					<Spinner label="Loading users..." block />
+				</div>
+			)}
 			
 			{error && <p className="error-message">{error}</p>}
 			

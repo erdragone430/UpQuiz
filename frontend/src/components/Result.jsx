@@ -24,6 +24,13 @@ function Result({ data, questions }) {
 						<span className="separator">•</span>
 						<span className="no-answer">Unanswered: {data.no_answers}</span>
 					</div>
+					<div className="score-legend">
+						<span className="legend-item"><span className="legend-correct">+1</span> Correct</span>
+						<span className="legend-separator">|</span>
+						<span className="legend-item"><span className="legend-wrong">-0.33</span> Wrong</span>
+						<span className="legend-separator">|</span>
+						<span className="legend-item"><span className="legend-no-answer">0</span> Not provided</span>
+					</div>
 				</div>
 			)}
 			{Array.isArray(data.results) && data.results.length > 0 && (
@@ -67,6 +74,13 @@ function Result({ data, questions }) {
 											)}
 										</>
 									)}
+									
+									{/* Always show user's answer at the bottom */}
+									<div className="user-answer-summary">
+										<strong>Your answer:</strong> {item.your_answer || "Not provided"}
+										{item.is_correct && <span className="check-icon"> ✓</span>}
+										{!item.is_correct && item.your_answer && <span className="cross-icon"> ✗</span>}
+									</div>
 								</div>
 								{item.comment && (
 									<div className="result-item-comment">

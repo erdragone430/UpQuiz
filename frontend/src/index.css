@@ -308,6 +308,43 @@ body {
   color: #999;
 }
 
+.score-legend {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.9em;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: #666;
+}
+
+.score-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.score-legend .legend-correct {
+  color: #388e3c;
+  font-weight: 700;
+}
+
+.score-legend .legend-wrong {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+.score-legend .legend-no-answer {
+  color: #f57f17;
+  font-weight: 700;
+}
+
+.score-legend .legend-separator {
+  color: #ccc;
+}
+
 .results-list {
   list-style: none;
   padding: 0 25px 25px 25px;
@@ -399,11 +436,96 @@ body {
   font-weight: 600;
 }
 
+.user-answer-summary {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 2px solid #000000;
+  font-size: 1em;
+  color: #000000;
+}
+
+.user-answer-summary strong {
+  display: inline;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.user-answer-summary .check-icon {
+  color: #388e3c;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.user-answer-summary .cross-icon {
+  color: #d32f2f;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
 .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   text-align: center;
   padding: 20px;
   color: #000000;
   font-weight: 500;
+}
+
+.spinner-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: inherit;
+}
+
+.spinner-block {
+  width: 100%;
+  justify-content: center;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #000000;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+.spinner-sm .spinner {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+.spinner-lg .spinner {
+  width: 22px;
+  height: 22px;
+  border-width: 3px;
+}
+
+.spinner-label {
+  font-weight: 600;
+}
+
+.btn .spinner-wrapper {
+  gap: 6px;
+}
+
+.btn .spinner {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {
