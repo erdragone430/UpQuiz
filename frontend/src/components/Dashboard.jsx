@@ -7,6 +7,7 @@ function Dashboard({ username, onLogout }) {
 	const [history, setHistory] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState(null);
+	const [showAllHistory, setShowAllHistory] = useState(false);
 
 	useEffect(() => {
 		fetchStats();
@@ -128,7 +129,7 @@ function Dashboard({ username, onLogout }) {
 					<div className="quiz-history">
 						<h3>Quiz History</h3>
 						<div className="history-list">
-							{history.map((item, idx) => (
+							{(showAllHistory ? history : history.slice(0, 3)).map((item, idx) => (
 								<div key={idx} className="history-item">
 									<div className="history-quiz-name">{item.quiz_name}</div>
 									<div className="history-details">
@@ -142,6 +143,14 @@ function Dashboard({ username, onLogout }) {
 								</div>
 							))}
 						</div>
+						{history.length > 3 && (
+							<button 
+								onClick={() => setShowAllHistory(!showAllHistory)} 
+								className="btn btn-toggle-history"
+							>
+								{showAllHistory ? "Show Less" : `Show All (${history.length} quizzes)`}
+							</button>
+						)}
 					</div>
 				)}
 			</>
