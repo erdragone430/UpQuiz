@@ -14,9 +14,14 @@ router = APIRouter(prefix="/quiz", tags=["Quiz"])
 # Security settings
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 ALLOWED_EXTENSIONS = [".txt"]
+BLACKLISTED_EXTENSIONS = [".py", ".pyc", ".pyw"]
 
 async def validate_file_upload(file: UploadFile) -> str:
     """Validates file upload and returns content"""
+    # Check blacklisted extensions
+    if any(file.filename.endswith(ext) for ext in BLACKLISTED_EXTENSIONS):
+        raise HTTPException(status_code=403, detail="Only .txt files allowed")
+    
     # Check extension
     if not any(file.filename.endswith(ext) for ext in ALLOWED_EXTENSIONS):
         raise HTTPException(status_code=400, detail="Only .txt files allowed")
