@@ -95,10 +95,37 @@ async def register(user_data: UserRegister, request: Request, db: Session = Depe
 # Login
 @router.post("/login", response_model=TokenResponse)
 async def login(user_data: UserLogin, request: Request, db: Session = Depends(get_db)):
-    from datetime import datetime
+    from datetime import datetime, timezone, timedelta
+    
     user = db.query(User).filter(User.username == user_data.username).first()
     
+    # Check if user is locked due to brute force
+    if user and user.locked_until:
+        now = datetime.now(timezone.utc)
+        if now < user.locked_until:
+            remaining_seconds = int((user.locked_until - now).total_seconds())
+            raise HTTPException(
+                status_code=429,
+                detail=f"Account locked due to too many failed login attempts. Try again in {remaining_seconds} seconds"
+            )
+        else:
+            # Unlock the account
+            user.locked_until = None
+            user.failed_login_attempts = 0
+            db.commit()
+    
     if not user or not verify_password(user_data.password, user.hashed_password):
+        # Record failed login attempt
+        if user:
+            user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+            user.last_failed_login = datetime.now(timezone.utc)
+            
+            # Lock account after 5 failed attempts for 15 minutes
+            if user.failed_login_attempts >= 5:
+                user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=30)
+            
+            db.commit()
+        
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Get client IP
@@ -108,8 +135,11 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
     if forwarded_for:
         client_ip = forwarded_for.split(",")[0].strip()
     
-    # Update last login and IP
-    user.last_login = datetime.utcnow()
+    # Reset failed login attempts on successful login
+    user.failed_login_attempts = 0
+    user.last_failed_login = None
+    user.locked_until = None
+    user.last_login = datetime.now(timezone.utc)
     user.last_ip = client_ip
     db.commit()
     
