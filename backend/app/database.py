@@ -6,10 +6,12 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
-# Database URL
+# Database URL - Usa l'utente applicativo con privilegi limitati
+# per limitare i danni in caso di SQL injection
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://quiz_user:quiz_password@localhost:5432/quiz_db"
+    # Default: utente con privilegi limitati (non amministratore)
+    "postgresql://quiz_app_user:quiz_app_password@localhost:5432/quiz_db"
 )
 
 print(f"Database URL: {DATABASE_URL}")

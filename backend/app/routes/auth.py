@@ -120,7 +120,7 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
             user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
             user.last_failed_login = datetime.now(timezone.utc)
             
-            # Lock account after 5 failed attempts for 15 minutes
+            # Lock account after 5 failed attempts for 30 minutes
             if user.failed_login_attempts >= 5:
                 user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=30)
             
