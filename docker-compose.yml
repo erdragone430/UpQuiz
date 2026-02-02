@@ -34,6 +34,7 @@ services:
       DATABASE_URL: postgresql://${APP_DB_USER}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}
       PORT: 3000
       ADMIN_USERNAME: ${ADMIN_USERNAME}
+      SECRET_KEY: ${SECRET_KEY}
     ports:
       - "3000:3000"
     volumes:
