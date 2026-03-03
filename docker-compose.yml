@@ -39,9 +39,11 @@ services:
       - "127.0.0.1:3000:3000"
     volumes:
       - ./backend/app:/app/app
+      - uploads_data:/app/uploads:rw
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
+  uploads_data:

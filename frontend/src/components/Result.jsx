@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 
 function Result({ data, questions }) {
 	if (!data) return null;
+	const [activeIndex, setActiveIndex] = useState(0);
 
 	// Create a map of questions for quick access
 	const questionsMap = {};
@@ -10,6 +11,31 @@ function Result({ data, questions }) {
 			questionsMap[q.question] = q;
 		});
 	}
+
+	const getNavigatorStatus = (item) => {
+		if (!item.your_answer) return "unanswered";
+		return item.is_correct ? "correct" : "wrong";
+	};
+
+	const scoringRules = data.scoring_rules || {
+		correct_points: 1,
+		wrong_penalty: 0.33,
+		no_answer_points: 0,
+	};
+
+	const formatPoints = (value) => {
+		const fixed = Number(value).toFixed(2);
+		return fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+	};
+
+	if (!Array.isArray(data.results) || data.results.length === 0) {
+		return null;
+	}
+
+	const currentItem = data.results[activeIndex];
+	const currentQuestionData = questionsMap[currentItem.question];
+	const goToPrevious = () => setActiveIndex((prev) => Math.max(0, prev - 1));
+	const goToNext = () => setActiveIndex((prev) => Math.min(data.results.length - 1, prev + 1));
 
 	return (
 		<div className="result">
@@ -25,73 +51,108 @@ function Result({ data, questions }) {
 						<span className="no-answer">Unanswered: {data.no_answers}</span>
 					</div>
 					<div className="score-legend">
-						<span className="legend-item"><span className="legend-correct">+1</span> Correct</span>
+						<span className="legend-item"><span className="legend-correct">+{formatPoints(scoringRules.correct_points)}</span> Correct</span>
 						<span className="legend-separator">|</span>
-						<span className="legend-item"><span className="legend-wrong">-0.33</span> Wrong</span>
+						<span className="legend-item"><span className="legend-wrong">-{formatPoints(scoringRules.wrong_penalty)}</span> Wrong</span>
 						<span className="legend-separator">|</span>
-						<span className="legend-item"><span className="legend-no-answer">0</span> Not provided</span>
+						<span className="legend-item"><span className="legend-no-answer">{formatPoints(scoringRules.no_answer_points)}</span> Not provided</span>
 					</div>
 				</div>
 			)}
-			{Array.isArray(data.results) && data.results.length > 0 && (
-				<ul className="results-list">
-					{data.results.map((item, idx) => {
-						const questionData = questionsMap[item.question];
-						return (
-							<li key={idx} className={`result-item ${item.is_correct ? "" : "incorrect"}`}>
-								<strong>{idx + 1}. {item.question}</strong>
-								<div className="result-item-details">
-									{/* Show all options if available */}
-									{questionData && questionData.options && (
-										<div className="options-list">
-											{questionData.options.map((opt, optIdx) => {
-												const isUserAnswer = opt === item.your_answer;
-												const isCorrectAnswer = opt === item.correct_answer;
-												let optionClass = "";
-												
-												if (isCorrectAnswer) optionClass = "correct-option";
-												if (isUserAnswer && !isCorrectAnswer) optionClass = "incorrect-option";
-												
-												return (
-													<div key={optIdx} className={`option-result ${optionClass}`}>
-														{opt}
-														{isUserAnswer && !isCorrectAnswer && " (Your answer)"}
-														{isCorrectAnswer && " (Correct)"}
-													</div>
-												);
-											})}
+			<div className="result-layout">
+				<div className="result-main-panel">
+					<div className={`result-item ${currentItem.is_correct ? "" : "incorrect"} active`}>
+						<div className="result-progress">
+							Question {activeIndex + 1} of {data.results.length}
+						</div>
+						<strong>{activeIndex + 1}. {currentItem.question}</strong>
+						<div className="result-item-details">
+							{currentQuestionData && currentQuestionData.options && (
+								<div className="options-list">
+									{currentQuestionData.options.map((opt, optIdx) => {
+										const isUserAnswer = opt === currentItem.your_answer;
+										const isCorrectAnswer = opt === currentItem.correct_answer;
+										let optionClass = "";
+
+										if (isCorrectAnswer) optionClass = "correct-option";
+										if (isUserAnswer && !isCorrectAnswer) optionClass = "incorrect-option";
+
+										return (
+											<div key={optIdx} className={`option-result ${optionClass}`}>
+												{opt}
+												{isUserAnswer && !isCorrectAnswer && " (Your answer)"}
+												{isCorrectAnswer && " (Correct)"}
+											</div>
+										);
+									})}
+								</div>
+							)}
+							{!currentQuestionData && (
+								<>
+									<div className="your-answer">
+										Your answer: {currentItem.your_answer}
+									</div>
+									{!currentItem.is_correct && (
+										<div className="correct-answer">
+											Correct answer: {currentItem.correct_answer}
 										</div>
 									)}
-									{!questionData && (
-										<>
-											<div className="your-answer">
-												Your answer: {item.your_answer}
-											</div>
-											{!item.is_correct && (
-												<div className="correct-answer">
-													Correct answer: {item.correct_answer}
-												</div>
-											)}
-										</>
-									)}
-									
-									{/* Always show user's answer at the bottom */}
-									<div className="user-answer-summary">
-										<strong>Your answer:</strong> {item.your_answer || "Not provided"}
-										{item.is_correct && <span className="check-icon"> ✓</span>}
-										{!item.is_correct && item.your_answer && <span className="cross-icon"> ✗</span>}
-									</div>
-								</div>
-								{item.comment && (
-									<div className="result-item-comment">
-										{item.comment}
-									</div>
-								)}
-							</li>
-						);
-					})}
-				</ul>
-			)}
+								</>
+							)}
+
+							<div className="user-answer-summary">
+								<strong>Your answer:</strong> {currentItem.your_answer || "Not provided"}
+								{currentItem.is_correct && <span className="check-icon"> ✓</span>}
+								{!currentItem.is_correct && currentItem.your_answer && <span className="cross-icon"> ✗</span>}
+							</div>
+						</div>
+						{currentItem.comment && (
+							<div className="result-item-comment">
+								{currentItem.comment}
+							</div>
+						)}
+					</div>
+
+					<div className="btn-container quiz-navigation-controls result-navigation-controls">
+						<button
+							type="button"
+							onClick={goToPrevious}
+							disabled={activeIndex === 0}
+							className="btn btn-secondary"
+						>
+							Previous
+						</button>
+						<button
+							type="button"
+							onClick={goToNext}
+							disabled={activeIndex === data.results.length - 1}
+							className="btn btn-secondary"
+						>
+							Next
+						</button>
+					</div>
+				</div>
+
+				<details className="result-sidebar result-sidebar-collapsible">
+					<summary className="result-sidebar-toggle">Question Navigator</summary>
+					<h4>Question Navigator</h4>
+					<div className="result-nav-grid">
+						{data.results.map((item, idx) => {
+							const status = getNavigatorStatus(item);
+							return (
+								<button
+									key={`result-nav-${idx}`}
+									type="button"
+									className={`result-nav-item ${status} ${idx === activeIndex ? "active" : ""}`.trim()}
+									onClick={() => setActiveIndex(idx)}
+								>
+									{idx + 1}
+								</button>
+							);
+						})}
+					</div>
+				</details>
+			</div>
 		</div>
 	);
 }

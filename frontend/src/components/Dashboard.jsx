@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 
 const API_BASE = "/api";
 
-function Dashboard({ username, onLogout }) {
+function Dashboard({ username, onLogout, view = "full" }) {
+	const isStatsOnly = view === "stats";
+	const isProfileView = view === "profile";
+	const showHeader = !isStatsOnly && !isProfileView;
+	const showHistory = !isStatsOnly;
 	const [stats, setStats] = useState(null);
 	const [history, setHistory] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -11,8 +15,10 @@ function Dashboard({ username, onLogout }) {
 
 	useEffect(() => {
 		fetchStats();
-		fetchHistory();
-	}, []);
+		if (showHistory) {
+			fetchHistory();
+		}
+	}, [showHistory]);
 
 	const fetchStats = async () => {
 		const token = localStorage.getItem("token");
@@ -76,42 +82,30 @@ function Dashboard({ username, onLogout }) {
 		return `${minutes}m`;
 	};
 
-	return (
-		<div className="dashboard">
-			<div className="dashboard-header">
-				<h2>Welcome, {username}!</h2>
-				<button onClick={onLogout} className="btn btn-logout">
-					Logout
-				</button>
-			</div>
-
-			{isLoading && <p className="loading">Loading statistics...</p>}
-			
-			{error && <p className="error-message">{error}</p>}
-			
-			{stats && !isLoading && (
-			<>
-				{stats.total_quizzes === 0 ? (
-					<div className="no-stats">
-						<p>No statistics yet</p>
-						<p className="no-stats-hint">Complete your first quiz to see your stats here!</p>
+	const renderStatsPanel = () => (
+		<div className="dashboard-panel">
+			<h3 className="dashboard-panel-title">Your Statistics</h3>
+			{stats.total_quizzes === 0 ? (
+				<div className="no-stats">
+					<p>No statistics yet</p>
+					<p className="no-stats-hint">Complete your first quiz to see your stats here!</p>
+				</div>
+			) : (
+				<div className="stats-grid">
+					<div className="stat-card">
+						<div className="stat-value">{stats.total_quizzes}</div>
+						<div className="stat-label">Total Quizzes</div>
 					</div>
-				) : (
-					<div className="stats-grid">
-						<div className="stat-card">
-							<div className="stat-value">{stats.total_quizzes}</div>
-							<div className="stat-label">Total Quizzes</div>
-						</div>
 
-						<div className="stat-card">
-							<div className="stat-value">{stats.average_score.toFixed(1)}</div>
-							<div className="stat-label">Average Score</div>
-						</div>
+					<div className="stat-card">
+						<div className="stat-value">{stats.average_score.toFixed(1)}</div>
+						<div className="stat-label">Average Score</div>
+					</div>
 
-						<div className="stat-card">
-							<div className="stat-value correct">{stats.total_correct}</div>
-							<div className="stat-label">Correct Answers</div>
-						</div>
+					<div className="stat-card">
+						<div className="stat-value correct">{stats.total_correct}</div>
+						<div className="stat-label">Correct Answers</div>
+					</div>
 
 					<div className="stat-card">
 						<div className="stat-value no-answer">{stats.total_unanswered}</div>
@@ -123,34 +117,69 @@ function Dashboard({ username, onLogout }) {
 						<div className="stat-label">Time Spent</div>
 					</div>
 				</div>
-				)}
+			)}
+		</div>
+	);
 
-				{history.length > 0 && (
-					<div className="quiz-history">
-						<h3>Quiz History</h3>
-						<div className="history-list">
-							{(showAllHistory ? history : history.slice(0, 3)).map((item, idx) => (
-								<div key={idx} className="history-item">
-									<div className="history-quiz-name">{item.quiz_name}</div>
-									<div className="history-details">
-										<span className="history-score">
-											Score: {item.score.toFixed(2)} / {item.max_score} ({item.score_percentage}%)
-										</span>
-										<span className="history-attempt">Attempt #{item.attempt_number}</span>
-										<span className="history-time">Time: {formatTime(item.time_spent)}</span>
-										<span className="history-date">{item.completed_at}</span>
-									</div>
-								</div>
-							))}
+	return (
+		<div className={`dashboard ${isStatsOnly ? "dashboard-stats-only" : ""} ${isProfileView ? "dashboard-profile-view" : ""}`.trim()}>
+			{showHeader && (
+				<div className="dashboard-header">
+					<h2>Welcome, {username}!</h2>
+					<button onClick={onLogout} className="btn btn-logout">
+						Logout
+					</button>
+				</div>
+			)}
+
+			{isLoading && <p className="loading">Loading statistics...</p>}
+			
+			{error && <p className="error-message">{error}</p>}
+			
+			{stats && !isLoading && (
+			<>
+				{isStatsOnly ? (
+					renderStatsPanel()
+				) : (
+					<div className="dashboard-layout">
+						<div className="dashboard-column dashboard-column-stats">
+							{renderStatsPanel()}
 						</div>
-						{history.length > 3 && (
-							<button 
-								onClick={() => setShowAllHistory(!showAllHistory)} 
-								className="btn btn-toggle-history"
-							>
-								{showAllHistory ? "Show Less" : `Show All (${history.length} quizzes)`}
-							</button>
-						)}
+
+						<div className="dashboard-column dashboard-column-history">
+							<div className="dashboard-panel quiz-history">
+								<h3 className="dashboard-panel-title">Quiz History</h3>
+								{history.length > 0 ? (
+									<>
+										<div className="history-list">
+											{(showAllHistory ? history : history.slice(0, 3)).map((item, idx) => (
+												<div key={idx} className="history-item">
+													<div className="history-quiz-name">{item.quiz_name}</div>
+													<div className="history-details">
+														<span className="history-score">
+															Score: {item.score.toFixed(2)} / {item.max_score} ({item.score_percentage}%)
+														</span>
+														<span className="history-attempt">Attempt #{item.attempt_number}</span>
+														<span className="history-time">Time: {formatTime(item.time_spent)}</span>
+														<span className="history-date">{item.completed_at}</span>
+													</div>
+												</div>
+											))}
+										</div>
+										{history.length > 3 && (
+											<button 
+												onClick={() => setShowAllHistory(!showAllHistory)} 
+												className="btn btn-toggle-history"
+											>
+												{showAllHistory ? "Show Less" : `Show All (${history.length} quizzes)`}
+											</button>
+										)}
+									</>
+								) : (
+									<p className="no-stats-hint">No quiz attempts yet.</p>
+								)}
+							</div>
+						</div>
 					</div>
 				)}
 			</>
