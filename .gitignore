@@ -31,3 +31,6 @@ Thumbs.db
 
 # Docker
 *.log
+
+# SQL 
+*.sql

@@ -82,13 +82,6 @@ function AdminDashboard({ onLogout }) {
 
 	return (
 		<div className="admin-dashboard">
-			<div className="dashboard-header">
-				<h2>Admin Dashboard</h2>
-				<button onClick={onLogout} className="btn btn-logout">
-					Logout
-				</button>
-			</div>
-
 			{isLoading && (
 				<div className="loading">
 					<Spinner label="Loading users..." block />

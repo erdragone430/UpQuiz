@@ -1,14 +1,28 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.routes.quiz import router as quiz_router
 from app.routes.auth import router as auth_router
 from app.routes.upload import router as upload_router
 from app.database import Base, engine
+from pathlib import Path
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Create uploads directory with secure permissions
+uploads_dir = Path("uploads/profile_pictures")
+uploads_dir.mkdir(parents=True, exist_ok=True)
+
+# Set secure permissions: 755 for directories (rwxr-xr-x)
+import os
+os.chmod(Path("uploads"), 0o755)
+os.chmod(uploads_dir, 0o755)
+
 app = FastAPI(title="Quiz App with Auth")
+
+# Mount static files for uploads
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # CORS configuration
 app.add_middleware(

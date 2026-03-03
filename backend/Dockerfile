@@ -16,5 +16,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia il codice del backend mantenendo la struttura app/
 COPY app/ ./app/
 
+# Crea directory uploads con permessi sicuri (senza esecuzione per i file)
+RUN mkdir -p /app/uploads/profile_pictures && \
+    chmod 755 /app/uploads && \
+    chmod 755 /app/uploads/profile_pictures
+
 # Comando per avviare
 CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]

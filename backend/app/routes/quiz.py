@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Header, Depends
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.services.parser import parse_quiz_text
 from app.services.validator import validate_quiz_file
 from app.database import get_db
@@ -15,6 +15,7 @@ router = APIRouter(prefix="/quiz", tags=["Quiz"])
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 ALLOWED_EXTENSIONS = [".txt"]
 BLACKLISTED_EXTENSIONS = [".py", ".pyc", ".pyw"]
+MAX_QUIZ_QUESTIONS = 33
 
 async def validate_file_upload(file: UploadFile) -> str:
     """Validates file upload and returns content"""
@@ -80,6 +81,11 @@ async def upload_quiz(file: UploadFile = File(...)):
 # 2️⃣ Endpoint POST /simulate (quiz randomizzato senza risposte corrette)
 @router.post("/simulate")
 async def simulate_quiz(file: UploadFile = File(...), max_questions: int = 31):
+    if max_questions < 1:
+        raise HTTPException(status_code=400, detail="max_questions must be at least 1")
+    if max_questions > MAX_QUIZ_QUESTIONS:
+        raise HTTPException(status_code=400, detail=f"max_questions cannot exceed {MAX_QUIZ_QUESTIONS}")
+
     try:
         text = await validate_file_upload(file)
         
@@ -128,6 +134,8 @@ class QuizSubmitRequest(BaseModel):
     original_file_content: str
     quiz_name: str = "Unknown Quiz"
     time_spent: int = 0  # in seconds
+    correct_points: int = Field(default=1, ge=1, le=100)
+    wrong_penalty: float = Field(default=0.33, ge=0, le=100)
 
 @router.post("/submit")
 def submit_quiz(
@@ -149,6 +157,8 @@ def submit_quiz(
     wrong_answers = 0
     no_answers = 0
     results = []
+    correct_points = data.correct_points
+    wrong_penalty = data.wrong_penalty
 
     for q in data.questions:
         question_text = q.question
@@ -162,10 +172,10 @@ def submit_quiz(
             score = 0  # non risposta
             no_answers += 1
         elif is_correct:
-            score = 1  # risposta corretta
+            score = correct_points  # risposta corretta
             correct_answers += 1
         else:
-            score = -0.33  # risposta sbagliata
+            score = -wrong_penalty  # risposta sbagliata
             wrong_answers += 1
 
         total_score += score
@@ -179,8 +189,8 @@ def submit_quiz(
             "comment": comment
         })
 
-    max_score = total_questions
-    score_percentage = round((total_score / max_score) * 100, 2)
+    max_score = total_questions * correct_points
+    score_percentage = round((total_score / max_score) * 100, 2) if max_score > 0 else 0
 
     # Save statistics if user is authenticated
     if authorization:
@@ -223,5 +233,10 @@ def submit_quiz(
         "total_score": round(total_score, 2),
         "max_score": max_score,
         "score_percentage": score_percentage,
+        "scoring_rules": {
+            "correct_points": correct_points,
+            "wrong_penalty": round(wrong_penalty, 2),
+            "no_answer_points": 0,
+        },
         "results": results
     }
