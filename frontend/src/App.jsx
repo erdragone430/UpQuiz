@@ -41,7 +41,7 @@ function App() {
       // Load profile picture immediately
       const loadProfilePicture = async () => {
         try {
-          const response = await fetch("http://localhost:3000/api/auth/profile-picture", {
+          const response = await fetch("/api/auth/profile-picture", {
             headers: {
               "Authorization": `Bearer ${token}`
             }
@@ -50,7 +50,7 @@ function App() {
           if (response.ok) {
             const data = await response.json();
             if (data.profile_picture) {
-              setProfilePicture(`http://localhost:3000${data.profile_picture}`);
+              setProfilePicture(data.profile_picture);
             }
           }
         } catch (error) {
@@ -162,7 +162,7 @@ function App() {
           formData.append("file", processedFile);
 
           const token = localStorage.getItem("token");
-          const response = await fetch("http://localhost:3000/api/auth/profile-picture", {
+          const response = await fetch("/api/auth/profile-picture", {
             method: "POST",
             headers: {
               "Authorization": `Bearer ${token}`
@@ -172,7 +172,7 @@ function App() {
 
           if (response.ok) {
             const data = await response.json();
-            setProfilePicture(`http://localhost:3000${data.profile_picture}`);
+            setProfilePicture(data.profile_picture);
           } else {
             const error = await response.json();
             alert(error.detail || "Failed to upload profile picture");
