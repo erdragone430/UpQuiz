@@ -133,7 +133,7 @@ function Result({ data, questions }) {
 					</div>
 				</div>
 
-				<details className="result-sidebar result-sidebar-collapsible">
+				<details className="result-sidebar result-sidebar-collapsible" open>
 					<summary className="result-sidebar-toggle">Question Navigator</summary>
 					<h4>Question Navigator</h4>
 					<div className="result-nav-grid">

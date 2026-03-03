@@ -332,9 +332,9 @@ className="btn btn-secondary"
 Next
 </button>
 </div>
-</div>
+  </div>
 
-<details className="quiz-sidebar quiz-sidebar-collapsible">
+<details className="quiz-sidebar quiz-sidebar-collapsible" open>
 <summary className="quiz-sidebar-toggle">Question Navigator</summary>
 <h4>Question Navigator</h4>
 <div className="quiz-nav-grid">
