@@ -37,30 +37,40 @@ function App() {
       setIsAuthenticated(true);
       setUsername(savedUsername);
       setIsAdmin(savedIsAdmin);
-      
-      // Load profile picture immediately
-      const loadProfilePicture = async () => {
-        try {
-          const response = await fetch("/api/auth/profile-picture", {
-            headers: {
-              "Authorization": `Bearer ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.profile_picture) {
-              setProfilePicture(data.profile_picture);
-            }
-          }
-        } catch (error) {
-          console.error("Error loading profile picture:", error);
-        }
-      };
-      
-      loadProfilePicture();
     }
   }, []);
+
+  // Load profile picture when user changes
+  useEffect(() => {
+    const loadProfilePicture = async () => {
+      const token = localStorage.getItem("token");
+      
+      if (!token || !username || !isAuthenticated) {
+        setProfilePicture(null);
+        return;
+      }
+      
+      try {
+        const response = await fetch("/api/auth/profile-picture", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setProfilePicture(data.profile_picture || null);
+        } else {
+          setProfilePicture(null);
+        }
+      } catch (error) {
+        console.error("Error loading profile picture:", error);
+        setProfilePicture(null);
+      }
+    };
+    
+    loadProfilePicture();
+  }, [username, isAuthenticated]);
 
   useEffect(() => {
     const handlePopState = () => {
@@ -262,6 +272,8 @@ function App() {
     setUsername(null);
     setIsAdmin(false);
     setGuestMode(false);
+    setProfilePicture(null);
+    setUploadingPicture(false);
     navigateToHome();
   };
 
