@@ -1,4 +1,4 @@
-UpQuiz 🎓
+# UpQuiz
 
 UpQuiz is a simple and flexible web-based quiz generator.
 💡 Why I built this
@@ -13,3 +13,4 @@ I wanted to break that barrier. I built UpQuiz to be a web platform where the la
 - Web-based: Much more comfortable than a Telegram bot.
 
 - Custom sets: Just upload your file and start practicing immediately.
+
