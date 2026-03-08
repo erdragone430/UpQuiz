@@ -3,6 +3,7 @@ import re
 def validate_quiz_file(text: str):
     """
     Validates the quiz file and returns detailed errors/warnings
+    Supports both multiple choice (A-D) and numeric answer questions
     """
     errors = []
     warnings = []
@@ -30,17 +31,28 @@ def validate_quiz_file(text: str):
             warnings.append(f"Exercise {exercise_num}: question too short")
         
         options = [line for line in lines[1:] if re.match(r"[A-D]\)", line)]
-        if len(options) == 0:
-            errors.append(f"Exercise {exercise_num}: no options A-D found")
-        elif len(options) < 2:
-            warnings.append(f"Exercise {exercise_num}: less than 2 options")
-        
         risposta_lines = [line for line in lines if line.startswith("Risposta:")]
+        
         if not risposta_lines:
             errors.append(f"Exercise {exercise_num}: missing 'Risposta:'")
-        else:
-            risposta = risposta_lines[0].replace("Risposta:", "").strip()
+            continue
+            
+        risposta = risposta_lines[0].replace("Risposta:", "").strip()
+        
+        # Determina se è una domanda a risposta multipla o numerica
+        if len(options) > 0:
+            # Domanda a risposta multipla
+            if len(options) < 2:
+                warnings.append(f"Exercise {exercise_num}: less than 2 options")
+            
             if risposta not in "ABCD":
-                errors.append(f"Exercise {exercise_num}: Answer '{risposta}' is invalid (must be A, B, C or D)")
+                errors.append(f"Exercise {exercise_num}: Answer '{risposta}' is invalid for multiple choice (must be A, B, C or D)")
+        else:
+            # Domanda numerica
+            try:
+                # Prova a convertire in numero (supporta sia . che ,)
+                float(risposta.replace(",", "."))
+            except ValueError:
+                errors.append(f"Exercise {exercise_num}: Answer '{risposta}' is not a valid number")
     
     return errors, warnings

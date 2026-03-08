@@ -301,75 +301,92 @@ Question {currentQuestionIndex + 1} of {questions.length}
 <div className="question">
 <p>{currentQuestionIndex + 1}. {questions[currentQuestionIndex]?.question}</p>
 <div className="options">
-{questions[currentQuestionIndex]?.options.map((opt, optIdx) => (
-<label key={optIdx} className="option-label">
-<input
-type="radio"
-name={`question-${currentQuestionIndex}`}
-value={opt}
-checked={answers[questions[currentQuestionIndex].question] === opt}
-onChange={() => handleAnswerChange(questions[currentQuestionIndex].question, opt)}
-/>
-{opt}
-</label>
-))}
-</div>
-</div>
+                {questions[currentQuestionIndex]?.type === "multiple_choice" ? (
+                  questions[currentQuestionIndex]?.options.map((opt, optIdx) => (
+                    <label key={optIdx} className="option-label">
+                      <input
+                        type="radio"
+                        name={`question-${currentQuestionIndex}`}
+                        value={opt}
+                        checked={answers[questions[currentQuestionIndex].question] === opt}
+                        onChange={() => handleAnswerChange(questions[currentQuestionIndex].question, opt)}
+                      />
+                      {opt}
+                    </label>
+                  ))
+                ) : questions[currentQuestionIndex]?.type === "numeric" ? (
+                  <div className="numeric-answer-container">
+                    <label htmlFor="numeric-answer" className="numeric-label">
+                      Your numeric answer (±5% tolerance):
+                    </label>
+                    <input
+                      id="numeric-answer"
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Enter a number"
+                      value={answers[questions[currentQuestionIndex].question] || ""}
+                      onChange={(e) => handleAnswerChange(questions[currentQuestionIndex].question, e.target.value)}
+                      className="numeric-input"
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
 
-<div className="btn-container quiz-navigation-controls">
-<button
-onClick={goToPreviousQuestion}
-disabled={currentQuestionIndex === 0}
-className="btn btn-secondary"
->
-Previous
-</button>
-<button
-onClick={goToNextQuestion}
-disabled={currentQuestionIndex === questions.length - 1}
-className="btn btn-secondary"
->
-Next
-</button>
-</div>
+            <div className="btn-container quiz-navigation-controls">
+              <button
+                onClick={goToPreviousQuestion}
+                disabled={currentQuestionIndex === 0}
+                className="btn btn-secondary"
+              >
+                Previous
+              </button>
+              <button
+                onClick={goToNextQuestion}
+                disabled={currentQuestionIndex === questions.length - 1}
+                className="btn btn-secondary"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+
+          <details className="quiz-sidebar quiz-sidebar-collapsible" open>
+            <summary className="quiz-sidebar-toggle">Question Navigator</summary>
+            <h4>Question Navigator</h4>
+            <div className="quiz-nav-grid">
+              {questions.map((q, idx) => {
+                const isCurrent = idx === currentQuestionIndex;
+                const isAnswered = !!answers[q.question];
+                return (
+                  <button
+                    key={`${q.question}-${idx}`}
+                    type="button"
+                    className={`quiz-nav-item ${isCurrent ? "current" : ""} ${isAnswered ? "answered" : ""}`.trim()}
+                    onClick={() => setCurrentQuestionIndex(idx)}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </details>
+        </div>
+
+        <div className="btn-container">
+          <button 
+            onClick={submitQuiz} 
+            disabled={isSubmitting}
+            className="btn btn-primary btn-submit"
+          >
+            {isSubmitting ? <Spinner label="Submitting" size="sm" /> : "Submit Answers"}
+          </button>
+        </div>
+      </div>
+    )}
+
+    {result && <Result data={result} questions={questions} />}
   </div>
-
-<details className="quiz-sidebar quiz-sidebar-collapsible" open>
-<summary className="quiz-sidebar-toggle">Question Navigator</summary>
-<h4>Question Navigator</h4>
-<div className="quiz-nav-grid">
-{questions.map((q, idx) => {
-const isCurrent = idx === currentQuestionIndex;
-const isAnswered = !!answers[q.question];
-return (
-<button
-key={`${q.question}-${idx}`}
-type="button"
-className={`quiz-nav-item ${isCurrent ? "current" : ""} ${isAnswered ? "answered" : ""}`.trim()}
-onClick={() => setCurrentQuestionIndex(idx)}
->
-{idx + 1}
-</button>
-);
-})}
-</div>
-</details>
-</div>
-
-<div className="btn-container">
-<button 
-onClick={submitQuiz} 
-disabled={isSubmitting}
-className="btn btn-primary btn-submit"
->
-{isSubmitting ? <Spinner label="Submitting" size="sm" /> : "Submit Answers"}
-</button>
-</div>
-</div>
-)}
-
-{result && <Result data={result} questions={questions} />}
-</div>
 );
 }
 
