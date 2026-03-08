@@ -67,7 +67,7 @@ function Result({ data, questions }) {
 						</div>
 						<strong>{activeIndex + 1}. {currentItem.question}</strong>
 						<div className="result-item-details">
-							{currentQuestionData && currentQuestionData.options && (
+							{currentQuestionData && currentQuestionData.type === "multiple_choice" && currentQuestionData.options && (
 								<div className="options-list">
 									{currentQuestionData.options.map((opt, optIdx) => {
 										const isUserAnswer = opt === currentItem.your_answer;
@@ -87,7 +87,20 @@ function Result({ data, questions }) {
 									})}
 								</div>
 							)}
-							{!currentQuestionData && (
+							{currentItem.type === "numeric" && (
+								<div className="numeric-result-container">
+									<div className="numeric-result-label">
+										Numeric Answer (±5% tolerance)
+									</div>
+									<div className="your-answer">
+										Your answer: {currentItem.your_answer || "Not provided"}
+									</div>
+									<div className="correct-answer">
+										Correct answer: {currentItem.correct_answer}
+									</div>
+								</div>
+							)}
+							{!currentQuestionData && currentItem.type !== "numeric" && (
 								<>
 									<div className="your-answer">
 										Your answer: {currentItem.your_answer}

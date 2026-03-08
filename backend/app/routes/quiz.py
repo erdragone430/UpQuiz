@@ -112,11 +112,17 @@ async def simulate_quiz(file: UploadFile = File(...), max_questions: int = 31):
     # Rimuovi indice corretto dalle opzioni (già mescolate dal parser)
     quiz_for_user = []
     for q in quiz:
-        quiz_for_user.append({
+        question_data = {
             "question": q["question"],
-            "options": q["options"],
+            "type": q["type"],
             "comment": q.get("comment", "")
-        })
+        }
+        
+        if q["type"] == "multiple_choice":
+            question_data["options"] = q["options"]
+        # Per domande numeriche non inviamo il valore corretto
+        
+        quiz_for_user.append(question_data)
 
     return {
         "total": len(quiz_for_user), 
@@ -146,10 +152,20 @@ def submit_quiz(
     all_questions = parse_quiz_text(data.original_file_content)
 
     # Dizionario delle risposte corrette
-    answer_key = {
-        q["question"]: {"correct_option": q["options"][q["correct"]], "comment": q.get("comment", "")}
-        for q in all_questions
-    }
+    answer_key = {}
+    for q in all_questions:
+        if q["type"] == "multiple_choice":
+            answer_key[q["question"]] = {
+                "type": "multiple_choice",
+                "correct_option": q["options"][q["correct"]], 
+                "comment": q.get("comment", "")
+            }
+        elif q["type"] == "numeric":
+            answer_key[q["question"]] = {
+                "type": "numeric",
+                "correct_value": q["correct_value"],
+                "comment": q.get("comment", "")
+            }
 
     total_questions = len(data.questions)
     total_score = 0
@@ -163,12 +179,34 @@ def submit_quiz(
     for q in data.questions:
         question_text = q.question
         user_answer = q.answer
-        correct_option = answer_key[question_text]["correct_option"]
-        comment = answer_key[question_text]["comment"]
+        question_data = answer_key[question_text]
+        comment = question_data["comment"]
+
+        # Calcolo punteggio basato sul tipo di domanda
+        is_correct = False
+        correct_display = ""
+        
+        if question_data["type"] == "multiple_choice":
+            correct_option = question_data["correct_option"]
+            correct_display = correct_option
+            is_correct = user_answer == correct_option
+        elif question_data["type"] == "numeric":
+            correct_value = question_data["correct_value"]
+            correct_display = str(correct_value)
+            
+            # Verifica se l'utente ha risposto e se la risposta è numerica
+            if user_answer and user_answer.strip():
+                try:
+                    user_numeric = float(user_answer.replace(",", "."))
+                    # Applica tolleranza del 5%
+                    tolerance = abs(correct_value * 0.05)
+                    is_correct = abs(user_numeric - correct_value) <= tolerance
+                except ValueError:
+                    # Risposta non numerica per domanda numerica
+                    is_correct = False
 
         # Calcolo punteggio
-        is_correct = user_answer == correct_option
-        if user_answer == "":
+        if user_answer == "" or user_answer is None:
             score = 0  # non risposta
             no_answers += 1
         elif is_correct:
@@ -182,8 +220,9 @@ def submit_quiz(
 
         results.append({
             "question": question_text,
+            "type": question_data["type"],
             "your_answer": user_answer,
-            "correct_answer": correct_option,
+            "correct_answer": correct_display,
             "is_correct": is_correct,
             "score": score,
             "comment": comment
