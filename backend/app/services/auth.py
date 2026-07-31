@@ -5,7 +5,9 @@ from typing import Optional
 import os
 
 # Security config
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY or len(SECRET_KEY) < 32:
+    raise RuntimeError("SECRET_KEY environment variable must be set to a random string of at least 32 characters")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30 * 24  # 30 days
 

@@ -3,16 +3,33 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from app.database import get_db
 from app.models.user import User, QuizStat
-from app.services.auth import hash_password, verify_password, create_access_token
+from app.services.auth import hash_password, verify_password, create_access_token, SECRET_KEY
 from typing import Optional
 from fastapi import UploadFile, File
 import os
 import uuid
+import ipaddress
 from pathlib import Path
 from PIL import Image
 import io
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+TRUST_PROXY_HEADERS = os.getenv("TRUST_PROXY_HEADERS", "false").lower() == "true"
+
+def get_client_ip(request: Request) -> Optional[str]:
+    if TRUST_PROXY_HEADERS:
+        forwarded_for = request.headers.get("X-Forwarded-For")
+        if forwarded_for:
+            return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+def is_public_ip(ip: str) -> bool:
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return False
+    return not (addr.is_private or addr.is_reserved or addr.is_loopback or addr.is_link_local or addr.is_multicast or addr.is_unspecified)
 
 class UserRegister(BaseModel):
     username: str
@@ -75,7 +92,7 @@ async def register(user_data: UserRegister, request: Request, db: Session = Depe
     is_admin = (user_data.username == admin_username)
     
     # Get IP address from request
-    ip_address = request.headers.get("X-Forwarded-For", request.client.host).split(",")[0].strip()
+    ip_address = get_client_ip(request)
     
     # Create user
     new_user = User(
@@ -135,12 +152,8 @@ async def login(user_data: UserLogin, request: Request, db: Session = Depends(ge
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Get client IP
-    client_ip = request.client.host if request.client else None
-    # Check for forwarded IP (if behind proxy)
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        client_ip = forwarded_for.split(",")[0].strip()
-    
+    client_ip = get_client_ip(request)
+
     # Reset failed login attempts on successful login
     user.failed_login_attempts = 0
     user.last_failed_login = None
@@ -255,8 +268,8 @@ async def get_all_users(
     token = authorization.replace("Bearer ", "") if authorization else None
     user = get_current_user(token, db)
     
-    # Check if user is admin (only kingdragone)
-    if not user.is_admin or user.username != "kingdragone":
+    # Check if user is admin
+    if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin access required")
     
     users = db.query(User).all()
@@ -266,9 +279,9 @@ async def get_all_users(
         # Get quiz count for each user
         quiz_count = db.query(QuizStat).filter(QuizStat.user_id == u.id).count()
         
-        # Get geolocation for IP
+        # Get geolocation for IP (only for valid public IPs, to avoid SSRF via spoofed input)
         location = None
-        if u.last_ip and u.last_ip not in ["127.0.0.1", "localhost", None]:
+        if u.last_ip and is_public_ip(u.last_ip):
             try:
                 async with httpx.AsyncClient(timeout=2.0) as client:
                     response = await client.get(f"http://ip-api.com/json/{u.last_ip}")
@@ -308,8 +321,6 @@ async def upload_profile_picture(
     
     try:
         from jose import jwt
-        import os
-        SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this")
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         username = payload.get("sub")
     except:
@@ -505,8 +516,6 @@ async def get_profile_picture(
     
     try:
         from jose import jwt
-        import os
-        SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this")
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
         username = payload.get("sub")
     except:

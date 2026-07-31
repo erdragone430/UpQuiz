@@ -3,9 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from app.routes.quiz import router as quiz_router
 from app.routes.auth import router as auth_router
-from app.routes.upload import router as upload_router
 from app.database import Base, engine
 from pathlib import Path
+import os
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -15,7 +15,6 @@ uploads_dir = Path("uploads/profile_pictures")
 uploads_dir.mkdir(parents=True, exist_ok=True)
 
 # Set secure permissions: 755 for directories (rwxr-xr-x)
-import os
 os.chmod(Path("uploads"), 0o755)
 os.chmod(uploads_dir, 0o755)
 
@@ -25,9 +24,14 @@ app = FastAPI(title="Quiz App with Auth")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # CORS configuration
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for online deployment
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +40,6 @@ app.add_middleware(
 # Include routers with /api prefix
 app.include_router(quiz_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
-app.include_router(upload_router, prefix="/api")
 
 @app.get("/")
 def read_root():
